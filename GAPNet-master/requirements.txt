@@ -3,3 +3,4 @@ torchvision
 opencv-python
 tqdm
 fvcore
+timm>=0.9.7
