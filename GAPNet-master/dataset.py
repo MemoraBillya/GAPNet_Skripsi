@@ -104,7 +104,11 @@ class Dataset(TorchDataset):
             parts = line.strip().split()
             if len(parts) < 3:
                 continue
-            rgb_rel, flow_rel, mask_rel = parts[:3]
+            rgb_rel, flow_rel, mask_rel = (
+                self._normalize_relpath(parts[0]),
+                self._normalize_relpath(parts[1]),
+                self._normalize_relpath(parts[2]),
+            )
             rgb_path = (self.root / rgb_rel).resolve()
             flow_path = (self.root / flow_rel).resolve()
             mask_path = (self.root / mask_rel).resolve()
@@ -118,7 +122,7 @@ class Dataset(TorchDataset):
             parts = line.strip().split()
             if len(parts) < 2:
                 continue
-            rgb_rel, mask_rel = parts[:2]
+            rgb_rel, mask_rel = self._normalize_relpath(parts[0]), self._normalize_relpath(parts[1])
             rgb_path = (self.root / rgb_rel).resolve()
             mask_path = (self.root / mask_rel).resolve()
             if rgb_path.exists() and mask_path.exists():
@@ -171,6 +175,15 @@ class Dataset(TorchDataset):
             if key.endswith(suffix):
                 key = key[: -len(suffix)]
         return key
+
+    @staticmethod
+    def _normalize_relpath(relpath: str) -> str:
+        """Normalise relative paths coming from Windows generated split files."""
+
+        relpath = relpath.strip()
+        if not relpath:
+            return relpath
+        return relpath.replace("\\", "/")
 
     # ------------------------------------------------------------------
     # PyTorch dataset protocol
