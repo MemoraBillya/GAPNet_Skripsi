@@ -69,24 +69,19 @@ class GAPNet(nn.Module):
         
         self.arch = arch
         if arch == 'convnextv2_atto':
-            # ConvNeXtV2 provides its own helper so we can keep feature extraction logic tidy.
-            self.backbone = convnextv2_atto(pretrained)
-        else:
-            self.backbone = eval(arch)(pretrained)
-        self.global_guidance = global_guidance
-        self.diverse_supervision = diverse_supervision
-
-        # if 'mobilenetv2' in arch:
-        if arch == 'convnextv2_atto':
             # Use the backbone metadata to configure the decoder automatically.
             enc_channels = self.backbone.out_channels + [self.backbone.out_channels[-1]]
-            dec_channels = [48, 96, 128, 160, 160, 160]
+            # Align the decoder widths with the fusion blocks:
+            #   * stage1/stage2 share the same width so the low/mid cat matches
+            #     the expected ReceptiveVit input;
+            #   * the second fusion block expects twice this width when it
+            #     concatenates with the global stream, so reuse 160 there too.
+            dec_channels = [48, 160, 160, 160, 160, 160]
             use_dwconv = False
         else:
             enc_channels = [16, 24, 32, 96, 160, last_channel]
             dec_channels = [16, 40, 40, 40, 40, 40]
             use_dwconv = 'mobilenet' in arch
-
     
         self.vit_global = nn.ModuleList([Block(dim=enc_channels[i+4], out_features=enc_channels[-1]) for i in range(2)])
 
