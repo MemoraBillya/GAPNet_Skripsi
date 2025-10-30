@@ -232,7 +232,17 @@ def main() -> None:
 
     train_cmd = _build_train_command(repo_root, args)
     print("Launching training command:\n", " ".join(train_cmd))
-    subprocess.run(train_cmd, check=True, cwd=repo_root)
+
+    # Ensure the repository root is on PYTHONPATH so `import models` works even
+    # when scripts/train.py is executed via an absolute path.  Kaggle notebooks
+    # often modify sys.path implicitly, so we make the requirement explicit here.
+    env = os.environ.copy()
+    python_path_entries = [str(repo_root)]
+    if env.get("PYTHONPATH"):
+        python_path_entries.append(env["PYTHONPATH"])
+    env["PYTHONPATH"] = os.pathsep.join(python_path_entries)
+
+    subprocess.run(train_cmd, check=True, cwd=repo_root, env=env)
 
 
 if __name__ == "__main__":
