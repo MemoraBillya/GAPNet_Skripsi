@@ -180,28 +180,35 @@ class ToTensor(object):
     '''
     This class converts the data to tensor so that it can be processed by PyTorch
     '''
-    def __init__(self, scale=1):
-        '''
-        :param scale: set this parameter according to the output scale
-        '''
+    """Convert OpenCV numpy arrays into PyTorch tensors."""
+
+    def __init__(self, scale=1, BGR=True):
+        """Keep backward compatibility with the original signature."""
         self.scale = scale
+        self.BGR = BGR
 
     def __call__(self, image, label, depth=None):
         if self.scale != 1:
             h, w = label.shape[:2]
             image = cv2.resize(image, (int(w), int(h)))
-            label = cv2.resize(label, (int(w/self.scale), int(h/self.scale)), \
-                interpolation=cv2.INTER_NEAREST)
-            depth = cv2.resize(image, (int(w), int(h))) if depth is not None else None
-        image = image[:,:, ::-1].copy() # .copy() is to solve "torch does not support negative index"
-        image = image.transpose((2, 0, 1))
+            label = cv2.resize(
+                label,
+                (int(w / self.scale), int(h / self.scale)),
+                interpolation=cv2.INTER_NEAREST,
+            )
+            depth = cv2.resize(depth, (int(w), int(h))) if depth is not None else None
+
+        if self.BGR:
+            image = image[:, :, ::-1]
+        image = image.copy().transpose((2, 0, 1))
         image_tensor = torch.from_numpy(image)
         # TODO: here, we add unsqueeze to satisfy the condition that
         # adjust_size in DataSet.py should input 4D tensor
-        label_tensor =  torch.LongTensor(np.array(label, dtype=np.int)).unsqueeze(dim=0)
+        label_tensor = torch.LongTensor(np.array(label, dtype=np.int64)).unsqueeze(dim=0)
         if depth is not None:
-            depth = depth[:, :, ::-1].copy().transpose((2, 0, 1))
-            depth_tensor = torch.from_numpy(depth).float()
+            if self.BGR:
+                depth = depth[:, :, ::-1]
+            depth_tensor = torch.from_numpy(depth.copy().transpose((2, 0, 1))).float()
         else:
             depth_tensor = torch.rand(1,10,10).float()
 
