@@ -8,7 +8,7 @@ from models.utils import ConvBNReLU, ReceptiveVit
 from models.vgg import vgg16
 from models.resnet import resnet50, resnet101, resnet152, Bottleneck
 from models.MobileNetV2 import mobilenetv2
-from models.convnextv2 import convnextv2_atto
+from models.ConvNeXtV2 import convnextv2_atto
 # try:
 
 from models.vit_fusion import Block
