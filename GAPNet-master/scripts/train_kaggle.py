@@ -101,6 +101,9 @@ def main() -> None:
             "'gapnet-sod'."
         ),
     )
+    # Every option below accepts both dash and underscore styles so users can
+    # copy either CLI form from the README or their own notebooks without
+    # editing flag names.
     parser.add_argument(
         "--arch",
         default="convnextv2_atto",
@@ -108,18 +111,21 @@ def main() -> None:
     )
     parser.add_argument(
         "--max-epochs",
+        "--max_epochs",
         type=int,
         default=40,
         help="Number of training epochs to run on Kaggle.",
     )
     parser.add_argument(
         "--batch-size",
+        "--batch_size",
         type=int,
         default=8,
         help="Mini-batch size per iteration. Adjust to fit Kaggle GPU memory.",
     )
     parser.add_argument(
         "--num-workers",
+        "--num_workers",
         type=int,
         default=4,
         help="How many DataLoader workers to spawn.",
@@ -132,33 +138,39 @@ def main() -> None:
     )
     parser.add_argument(
         "--lr-mode",
+        "--lr_mode",
         default="poly",
         choices=["poly", "step"],
         help="Learning-rate schedule to reuse from scripts/train.py.",
     )
     parser.add_argument(
         "--multi-scale",
+        "--multi_scale",
         action="store_true",
         help="Enable multi-scale augmentation (maps to --ms 1).",
     )
     parser.add_argument(
         "--use-bce-dice",
+        "--use_bce_dice",
         action="store_true",
         help="Train with the BCE+Dice loss combination (maps to --bcedice 1).",
     )
     parser.add_argument(
         "--adam-beta2",
+        "--adam_beta2",
         type=float,
         default=0.99,
         help="beta2 hyper-parameter for the Adam optimizer.",
     )
     parser.add_argument(
         "--group-lr",
+        "--group_lr",
         action="store_true",
         help="Toggle grouped learning rate for backbone parameters.",
     )
     parser.add_argument(
         "--ignore-index",
+        "--ignore_index",
         action="store_true",
         help="Enable ignore-index handling in the CE+O loss (maps to --igi 1).",
     )
@@ -170,12 +182,14 @@ def main() -> None:
     )
     parser.add_argument(
         "--use-gpu",
+        "--use_gpu",
         default=True,
         type=lambda value: str(value).lower() == "true",
         help="Whether to ask scripts/train.py to use CUDA (default: True).",
     )
     parser.add_argument(
         "--gpu-id",
+        "--gpu_id",
         default="0",
         help="CUDA device index visible inside the Kaggle session.",
     )
@@ -197,6 +211,10 @@ def main() -> None:
     data_src = KAGGLE_INPUT_ROOT / args.dataset_name
     data_dest = repo_root / "data"
     prepared_data_dir = _ensure_symlink(data_src, data_dest)
+    print(
+        f"Dataset root mounted: {prepared_data_dir} -> {data_src}."
+        " Contents should include DUTS-TR/, SOD/, etc."
+    )
 
     # Store checkpoints and logs under /kaggle/working so they survive until the
     # notebook finishes (they can be downloaded as output artifacts).
@@ -214,7 +232,7 @@ def main() -> None:
 
     train_cmd = _build_train_command(repo_root, args)
     print("Launching training command:\n", " ".join(train_cmd))
-    subprocess.run(train_cmd, check=True)
+    subprocess.run(train_cmd, check=True, cwd=repo_root)
 
 
 if __name__ == "__main__":
