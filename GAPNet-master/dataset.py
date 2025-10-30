@@ -79,7 +79,13 @@ class Dataset(TorchDataset):
 
         list_file = self.root / f"{dataset_name}.txt"
         if list_file.exists():
-            return self._parse_sod_split(list_file)
+            samples = self._parse_sod_split(list_file)
+            if samples:
+                return samples
+            # Some public splits ship with Windows-style paths that no longer
+            # match the mounted Kaggle directory structure.  Fall back to a
+            # directory scan instead of failing with an empty list so the
+            # training loop can continue.
 
         dataset_dir = self.root / dataset_name
         if dataset_dir.exists():
