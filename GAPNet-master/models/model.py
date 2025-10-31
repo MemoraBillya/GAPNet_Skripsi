@@ -68,9 +68,21 @@ class GAPNet(nn.Module):
         super(GAPNet, self).__init__()
         
         self.arch = arch
+        backbone = None
+        if arch == 'convnextv2_atto':
+            # ConvNeXtV2 provides its own helper so we can keep feature extraction logic tidy.
+            backbone = convnextv2_atto(pretrained)
+        else:
+            backbone = eval(arch)(pretrained)
+        # Register the backbone only after it is fully constructed to avoid transient
+        # AttributeErrors while subsequent configuration logic inspects its metadata.
+        self.backbone = backbone
+        self.global_guidance = global_guidance
+        self.diverse_supervision = diverse_supervision
+
         if arch == 'convnextv2_atto':
             # Use the backbone metadata to configure the decoder automatically.
-            enc_channels = self.backbone.out_channels + [self.backbone.out_channels[-1]]
+            enc_channels = backbone.out_channels + [backbone.out_channels[-1]]
             # Align the decoder widths with the fusion blocks:
             #   * stage1/stage2 share the same width so the low/mid cat matches
             #     the expected ReceptiveVit input;
